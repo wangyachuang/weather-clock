@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>横屏天气时钟</title>
+<style>
+  :root{
+    --text: #eaf1ff;
+    --muted: rgba(234,241,255,.55);
+    --line: rgba(255,255,255,.10);
+    --accent: #5eead4;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html, body{ height:100%; }
+
+  body{
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    color: var(--text);
+    overflow: hidden;
+    background:
+      radial-gradient(1200px 700px at 10% -15%, #1e3a6e 0%, transparent 62%),
+      radial-gradient(1000px 650px at 105% 115%, #2c1c5e 0%, transparent 62%),
+      #070b16;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== 整体布局（横屏） ===== */
+  .app{
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px 24px 10px;
+  }
+
+  .main{
+    flex: 1;
+    display: flex;
+    gap: 20px;
+    min-height: 0;
+  }
+
+  .panel{
+    background: linear-gradient(160deg, rgba(255,255,255,.09), rgba(255,255,255,.03));
+    border: 1px solid var(--line);
+    border-radius: 28px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 24px 60px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.08);
+    padding: clamp(22px, 3.2vh, 44px);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    animation: rise .6s cubic-bezier(.2,.8,.3,1) both;
+  }
+
+  @keyframes rise{
+    from{ opacity:0; transform: translateY(18px); }
+    to  { opacity:1; transform: none; }
+  }
+
+  /* ===== 左：天气 ===== */
+  .panel-weather{
+    flex: 0 0 36%;
+    justify-content: space-between;
+    gap: clamp(10px, 2vh, 26px);
+    animation-delay: .05s;
+  }
+
+  .location{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: clamp(13px, 1.3vw, 19px);
+    letter-spacing: .1em;
+    color: var(--muted);
+  }
+  .dot{
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 14px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+    flex: none;
+  }
+  @keyframes pulse{ 50%{ opacity:.3; transform: scale(.75); } }
+
+  .weather-main{
+    display: flex;
+    align-items: center;
+    gap: clamp(8px, 1.8vw, 26px);
+  }
+
+  .wicon{
+    font-size: clamp(52px, 7vw, 118px);
+    line-height: 1;
+    filter: drop-shadow(0 10px 26px rgba(94,234,212,.22));
+  }
+
+  .temp{
+    display: flex;
+    align-items: flex-start;
+    font-size: clamp(60px, 9.5vw, 158px);
+    font-weight: 200;
+    line-height: .86;
+    letter-spacing: -.045em;
+    font-variant-numeric: tabular-nums;
+  }
+  .temp .unit{
+    font-size: .26em;
+    font-weight: 400;
+    color: var(--muted);
+    margin-top: .55em;
+    margin-left: .12em;
+    letter-spacing: 0;
+  }
+
+  .desc{
+    font-size: clamp(16px, 1.9vw, 28px);
+    letter-spacing: .07em;
+    color: rgba(234,241,255,.85);
+  }
+
+  .metrics{
+    display: flex;
+    gap: clamp(10px, 2vw, 26px);
+    padding-top: clamp(12px, 2vh, 22px);
+    border-top: 1px solid rgba(255,255,255,.08);
+  }
+  .metric{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  .metric .label{
+    font-size: clamp(10px, .95vw, 13px);
+    letter-spacing: .14em;
+    color: var(--muted);
+  }
+  .metric .value{
+    font-size: clamp(15px, 1.7vw, 25px);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* ===== 右：日期 ===== */
+  .panel-date{
+    flex: 1;
+    justify-content: center;
+    gap: clamp(10px, 2vh, 26px);
+    animation-delay: .12s;
+  }
+
+  .panel-label{
+    font-size: clamp(11px, 1vw, 15px);
+    letter-spacing: .38em;
+    color: var(--muted);
+  }
+
+  .date-main{
+    font-size: clamp(38px, 6.2vw, 106px);
+    font-weight: 200;
+    line-height: 1.06;
+    letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .date-sub{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .week{
+    padding: 5px 18px;
+    border-radius: 999px;
+    font-size: clamp(13px, 1.5vw, 22px);
+    color: #a7f3e4;
+    background: rgba(94,234,212,.12);
+    border: 1px solid rgba(94,234,212,.30);
+  }
+
+  .divider{
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255,255,255,.16), transparent);
+  }
+
+  .clock{
+    font-size: clamp(26px, 3.4vw, 58px);
+    font-weight: 300;
+    letter-spacing: .07em;
+    color: rgba(234,241,255,.55);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ===== 底部控制条 ===== */
+  .controls{
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 2px 6px 4px;
+    font-size: 13.5px;
+    color: var(--muted);
+  }
+
+  .controls .ctl-label{ letter-spacing: .12em; }
+
+  select, button{
+    font: inherit;
+    color: var(--text);
+    background: rgba(255,255,255,.07);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 7px 13px;
+    cursor: pointer;
+    outline: none;
+    transition: background .18s, border-color .18s, transform .1s;
+  }
+  select:hover, button:hover{
+    background: rgba(255,255,255,.15);
+    border-color: rgba(255,255,255,.22);
+  }
+  button:active{ transform: scale(.96); }
+  select option{ background:#141b2c; color:#eaf1ff; }
+
+  #status{
+    min-width: 160px;
+    letter-spacing: .05em;
+    transition: color .2s;
+  }
+  #status.error{ color: #fca5a5; }
+
+  /* ===== 竖屏 / 窄屏兜底 ===== */
+  @media (max-aspect-ratio: 1/1){
+    body{ overflow: auto; }
+    .app{ height: auto; min-height: 100dvh; }
+    .main{ flex-direction: column; }
+    .panel-weather{ flex: none; }
+    .panel-date{ padding-bottom: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <main class="main">
+
+    <!-- 左：天气 -->
+    <section class="panel panel-weather">
+      <div class="location">
+        <span class="dot"></span>
+        <span id="city">定位中…</span>
+      </div>
+
+      <div class="weather-main">
+        <div class="wicon" id="wicon">⛅</div>
+        <div class="temp">
+          <span id="temp">--</span><span class="unit">°C</span>
+        </div>
+      </div>
+
+      <div class="desc" id="wdesc">正在获取天气…</div>
+
+      <div class="metrics">
+        <div class="metric">
+          <span class="label">体感</span>
+          <span class="value" id="feels">--</span>
+        </div>
+        <div class="metric">
+          <span class="label">湿度</span>
+          <span class="value" id="hum">--</span>
+        </div>
+        <div class="metric">
+          <span class="label">风速</span>
+          <span class="value" id="wind">--</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右：日期 -->
+    <section class="panel panel-date">
+      <div class="panel-label">TODAY</div>
+      <div class="date-main" id="dateMain">--</div>
+      <div class="date-sub">
+        <span class="week" id="week">--</span>
+      </div>
+      <div class="divider"></div>
+      <div class="clock" id="time">--:--:--</div>
+    </section>
+
+  </main>
+
+  <!-- 底部控制条 -->
+  <footer class="controls">
+    <span class="ctl-label">刷新间隔</span>
+    <select id="interval">
+      <option value="0">手动刷新</option>
+      <option value="1">1 分钟</option>
+      <option value="5">5 分钟</option>
+      <option value="10">10 分钟</option>
+      <option value="15">15 分钟</option>
+      <option value="30">30 分钟</option>
+      <option value="60">60 分钟</option>
+    </select>
+    <button id="refreshBtn">立即刷新</button>
+    <span id="status"></span>
+  </footer>
+</div>
+
+<script>
+/* ================= 时钟 & 日期 ================= */
+const WEEK = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+const pad = n => String(n).padStart(2, '0');
+
+const els = {
+  city:      document.getElementById('city'),
+  wicon:     document.getElementById('wicon'),
+  temp:      document.getElementById('temp'),
+  wdesc:     document.getElementById('wdesc'),
+  feels:     document.getElementById('feels'),
+  hum:       document.getElementById('hum'),
+  wind:      document.getElementById('wind'),
+  dateMain:  document.getElementById('dateMain'),
+  week:      document.getElementById('week'),
+  time:      document.getElementById('time'),
+  status:    document.getElementById('status'),
+  interval:  document.getElementById('interval'),
+  refreshBtn:document.getElementById('refreshBtn'),
+};
+
+function tick(){
+  const d = new Date();
+  els.time.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  els.dateMain.textContent = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+  els.week.textContent = WEEK[d.getDay()];
+}
+tick();
+setInterval(tick, 1000);
+
+/* ================= 天气数据 ================= */
+// WMO 天气代码 -> [中文描述, 图标]
+const WMO = {
+  0:['晴','☀️'],        1:['晴间少云','🌤️'],  2:['多云','⛅'],      3:['阴','☁️'],
+  45:['雾','🌫️'],       48:['雾凇','🌫️'],
+  51:['小毛毛雨','🌦️'], 53:['毛毛雨','🌦️'],   55:['大毛毛雨','🌦️'],
+  56:['冻毛毛雨','🌧️'], 57:['强冻毛毛雨','🌧️'],
+  61:['小雨','🌦️'],     63:['中雨','🌧️'],     65:['大雨','🌧️'],
+  66:['冻雨','🌧️'],     67:['强冻雨','🌧️'],
+  71:['小雪','🌨️'],     73:['中雪','🌨️'],     75:['大雪','❄️'],  77:['雪粒','🌨️'],
+  80:['小阵雨','🌦️'],   81:['阵雨','🌧️'],     82:['强阵雨','⛈️'],
+  85:['小阵雪','🌨️'],   86:['大阵雪','❄️'],
+  95:['雷阵雨','⛈️'],   96:['雷阵雨伴冰雹','⛈️'], 99:['强雷暴伴冰雹','⛈️']
+};
+const describe = code => WMO[code] || ['未知', '❔'];
+
+// 定位失败时的默认坐标（北京）
+const DEFAULT_LOC = { lat: 39.9042, lon: 116.4074 };
+
+function getPosition(){
+  return new Promise(resolve => {
+    if (!navigator.geolocation) return resolve(null);
+    navigator.geolocation.getCurrentPosition(
+      p => resolve({ lat: p.coords.latitude, lon: p.coords.longitude }),
+      () => resolve(null),
+      { timeout: 8000, maximumAge: 600000 }
+    );
+  });
+}
+
+async function reverseGeocode(lat, lon){
+  try{
+    const r = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh`
+    );
+    if (!r.ok) return '';
+    const d = await r.json();
+    return d.city || d.locality || d.principalSubdivision || '';
+  }catch(e){ return ''; }
+}
+
+function setStatus(msg, isError){
+  els.status.textContent = msg;
+  els.status.classList.toggle('error', !!isError);
+}
+
+let loading = false;
+
+async function loadWeather(){
+  if (loading) return;
+  loading = true;
+  setStatus('正在刷新…');
+
+  try{
+    const pos = await getPosition();
+    const loc = pos || DEFAULT_LOC;
+
+    const url = 'https://api.open-meteo.com/v1/forecast'
+      + `?latitude=${loc.lat}&longitude=${loc.lon}`
+      + '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m'
+      + '&timezone=auto';
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const cur = data.current || {};
+
+    if (typeof cur.temperature_2m !== 'number') throw new Error('数据异常');
+
+    const [text, icon] = describe(cur.weather_code);
+    els.temp.textContent  = Math.round(cur.temperature_2m);
+    els.wicon.textContent = icon;
+    els.wdesc.textContent = text;
+    els.feels.textContent = Math.round(cur.apparent_temperature) + '°';
+    els.hum.textContent   = Math.round(cur.relative_humidity_2m) + '%';
+    els.wind.textContent  = Math.round(cur.wind_speed_10m) + ' km/h';
+
+    const cityName = await reverseGeocode(loc.lat, loc.lon);
+    els.city.textContent = cityName || (pos ? '当前位置' : '北京 · 默认位置');
+
+    const t = new Date();
+    setStatus(`更新于 ${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}`);
+  }catch(err){
+    console.error(err);
+    setStatus('天气获取失败，请检查网络', true);
+  }finally{
+    loading = false;
+  }
+}
+
+/* ================= 自动刷新控制 ================= */
+const ALLOWED = [0, 1, 5, 10, 15, 30, 60];
+let timer = null;
+
+function scheduleRefresh(minutes){
+  clearInterval(timer);
+  if (minutes > 0) timer = setInterval(loadWeather, minutes * 60 * 1000);
+}
+
+// 读取上次保存的设置
+const saved = Number(localStorage.getItem('weatherRefreshMinutes'));
+let minutes = ALLOWED.includes(saved) ? saved : 10;
+els.interval.value = String(minutes);
+scheduleRefresh(minutes);
+
+els.interval.addEventListener('change', () => {
+  minutes = Number(els.interval.value);
+  localStorage.setItem('weatherRefreshMinutes', String(minutes));
+  scheduleRefresh(minutes);
+  setStatus(minutes > 0 ? `自动刷新：每 ${minutes} 分钟` : '已切换为手动刷新');
+});
+
+els.refreshBtn.addEventListener('click', loadWeather);
+
+// 页面重新可见时补一次刷新（避免标签页休眠导致数据过期）
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) loadWeather();
+});
+
+/* ================= 启动 ================= */
+loadWeather();
+</script>
+</body>
+</html>
