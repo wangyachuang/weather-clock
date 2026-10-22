@@ -2,15 +2,12 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<!-- 移动端 PWA 支持与全屏设置 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.json">
 <title>天气时钟相册</title>
 
-<!-- 引入 Google 艺术字体 (毛笔字 + 快乐体) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
@@ -21,7 +18,6 @@
     --muted: rgba(234,241,255,.55);
     --line: rgba(255,255,255,.10);
     --accent: #5eead4;
-    /* 墨水屏优化：禁用所有过渡动画，防止残影 */
     --transition-speed: 0s; 
   }
 
@@ -29,30 +25,48 @@
 
   html, body{ 
     height:100%; 
-    overflow: hidden; /* 防止滑动 */
-    user-select: none; /* 防止长按选中文字 */
+    overflow: hidden; 
+    user-select: none; 
+    background: #070b16;
   }
 
   body{
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
     color: var(--text);
+  }
+
+  /* ===== 强制旋转的容器 ===== */
+  #rotateWrapper {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: top left;
+    transition: transform 0.3s ease; /* 旋转时加一点平滑 */
     background:
       radial-gradient(1200px 700px at 10% -15%, #1e3a6e 0%, transparent 62%),
       radial-gradient(1000px 650px at 105% 115%, #2c1c5e 0%, transparent 62%),
       #070b16;
-    -webkit-font-smoothing: antialiased;
   }
 
-  /* ===== 整体布局（横屏） ===== */
+  /* 强制横向时的样式 */
+  body.force-landscape #rotateWrapper {
+    /* 旋转 90 度，并将容器宽高对调 */
+    transform: rotate(90deg) translateY(-100%);
+    width: 100vh;
+    height: 100vw;
+  }
+
+  /* ===== 整体布局 ===== */
   .app{
-    height: 100vh;
-    height: 100dvh;
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     gap: 14px;
     padding: 20px 24px 10px;
-    /* 适配安卓刘海屏/水滴屏 */
     padding-top: max(20px, env(safe-area-inset-top));
     padding-bottom: max(10px, env(safe-area-inset-bottom));
     padding-left: max(24px, env(safe-area-inset-left));
@@ -70,18 +84,13 @@
     background: linear-gradient(160deg, rgba(255,255,255,.09), rgba(255,255,255,.03));
     border: 1px solid var(--line);
     border-radius: 28px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 24px 60px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.08);
     display: flex;
     flex-direction: column;
     min-width: 0;
     overflow: hidden;
-    /* 移除入场动画，防止墨水屏闪烁 */
-    /* animation: rise .6s cubic-bezier(.2,.8,.3,1) both; */
   }
 
-  /* ===== 左：天气 + 文案 + 时间 ===== */
+  /* 左侧栏 */
   .panel-left{
     flex: 0 0 32%;
     padding: clamp(22px, 3.2vh, 44px);
@@ -107,8 +116,6 @@
     width: 8px; height: 8px; border-radius: 50%;
     background: var(--accent);
     box-shadow: 0 0 14px var(--accent);
-    /* 移除脉冲动画，墨水屏持续闪烁影响观感 */
-    /* animation: pulse 2s ease-in-out infinite; */
     flex: none;
   }
 
@@ -121,7 +128,6 @@
   .wicon{
     font-size: clamp(48px, 6vw, 90px);
     line-height: 1;
-    filter: drop-shadow(0 10px 26px rgba(94,234,212,.22));
   }
 
   .temp{
@@ -139,7 +145,6 @@
     color: var(--muted);
     margin-top: .55em;
     margin-left: .12em;
-    letter-spacing: 0;
   }
 
   .desc{
@@ -171,7 +176,7 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* ===== 自定义艺术文案区域 ===== */
+  /* 文案区 */
   .custom-quote{
     flex: 1;
     display: flex;
@@ -181,22 +186,19 @@
     margin: 15px 0;
     padding: 20px;
     width: 100%;
-    
     font-family: 'Ma Shan Zheng', 'KaiTi', 'STKaiti', serif; 
     font-size: var(--quote-size, 36px);
     line-height: 1.3;
     letter-spacing: 2px;
     color: #fff;
     text-shadow: 0 2px 15px rgba(255,255,255,0.3), 0 0 2px rgba(255,255,255,0.5);
-    
     border-radius: 16px;
     border: 1px dashed transparent;
-    transition: font-size var(--transition-speed) ease, border-color var(--transition-speed) ease, background var(--transition-speed) ease;
     outline: none;
     word-break: break-word;
     white-space: pre-wrap;
     overflow-y: auto;
-    user-select: text; /* 文案区允许选中修改 */
+    user-select: text;
   }
 
   .custom-quote:hover, .custom-quote:focus {
@@ -214,12 +216,11 @@
     pointer-events: none;
   }
 
-  /* 时间部分 */
+  /* 时间区 */
   .time-section {
     padding-top: 20px;
     border-top: 1px solid rgba(255,255,255,.08);
   }
-  
   .date-main{
     font-size: clamp(24px, 2.8vw, 42px);
     font-weight: 200;
@@ -250,7 +251,7 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* ===== 右：图片展示区 ===== */
+  /* 右侧图片区 */
   .panel-right{
     flex: 1;
     position: relative;
@@ -288,12 +289,6 @@
     border: 2px dashed rgba(255,255,255,.15);
     border-radius: 20px;
     cursor: pointer;
-    transition: all var(--transition-speed) ease;
-  }
-
-  .upload-placeholder:hover {
-    background: rgba(255,255,255,.05);
-    border-color: rgba(94,234,212,.5);
   }
 
   .upload-placeholder svg {
@@ -306,7 +301,6 @@
   .upload-placeholder p {
     font-size: 16px;
     color: var(--muted);
-    letter-spacing: 0.05em;
   }
 
   #imageUpload { display: none; }
@@ -324,8 +318,6 @@
     color: var(--muted);
   }
 
-  .controls .ctl-label{ letter-spacing: .12em; }
-
   select, button{
     font: inherit;
     color: var(--text);
@@ -335,105 +327,148 @@
     padding: 7px 13px;
     cursor: pointer;
     outline: none;
-    transition: background var(--transition-speed), border-color var(--transition-speed);
   }
   select:hover, button:hover{
     background: rgba(255,255,255,.15);
-    border-color: rgba(255,255,255,.22);
   }
   select option{ background:#141b2c; color:#eaf1ff; }
 
-  #status{
-    min-width: 160px;
-    letter-spacing: .05em;
-  }
+  #status{ min-width: 160px; }
   #status.error{ color: #fca5a5; }
 
-  /* ===== 竖屏兜底 ===== */
-  @media (max-aspect-ratio: 1/1){
-    .main{ flex-direction: column; }
-    .panel-left{ flex: none; }
-    .panel-right { min-height: 400px; }
+  /* ===== 竖屏兜底（未强制横屏时） ===== */
+  @media (max-aspect-ratio: 1/1) {
+    body:not(.force-landscape) .main { 
+      flex-direction: column; 
+    }
+    body:not(.force-landscape) .panel-left { 
+      flex: none; 
+    }
+    body:not(.force-landscape) .panel-right { 
+      min-height: 400px; 
+    }
   }
 </style>
 </head>
 <body>
 
-<div class="app">
-  <main class="main">
-    <section class="panel panel-left">
-      <div class="weather-section">
-        <div class="location">
-          <span class="dot"></span>
-          <span id="city">定位中…</span>
-        </div>
-        <div class="weather-main">
-          <div class="wicon" id="wicon">⛅</div>
-          <div class="temp">
-            <span id="temp">--</span><span class="unit">°C</span>
+<!-- 旋转包裹层 -->
+<div id="rotateWrapper">
+  <div class="app">
+    <main class="main">
+      <section class="panel panel-left">
+        <div class="weather-section">
+          <div class="location">
+            <span class="dot"></span>
+            <span id="city">定位中…</span>
+          </div>
+          <div class="weather-main">
+            <div class="wicon" id="wicon">⛅</div>
+            <div class="temp">
+              <span id="temp">--</span><span class="unit">°C</span>
+            </div>
+          </div>
+          <div class="desc" id="wdesc">正在获取天气…</div>
+          <div class="metrics">
+            <div class="metric">
+              <span class="label">体感</span>
+              <span class="value" id="feels">--</span>
+            </div>
+            <div class="metric">
+              <span class="label">湿度</span>
+              <span class="value" id="hum">--</span>
+            </div>
+            <div class="metric">
+              <span class="label">风速</span>
+              <span class="value" id="wind">--</span>
+            </div>
           </div>
         </div>
-        <div class="desc" id="wdesc">正在获取天气…</div>
-        <div class="metrics">
-          <div class="metric">
-            <span class="label">体感</span>
-            <span class="value" id="feels">--</span>
+
+        <div class="custom-quote" id="customQuote" contenteditable="true" spellcheck="false"></div>
+
+        <div class="time-section">
+          <div class="date-main" id="dateMain">--</div>
+          <div class="date-sub">
+            <span class="week" id="week">--</span>
           </div>
-          <div class="metric">
-            <span class="label">湿度</span>
-            <span class="value" id="hum">--</span>
-          </div>
-          <div class="metric">
-            <span class="label">风速</span>
-            <span class="value" id="wind">--</span>
-          </div>
+          <div class="clock" id="time">--:--:--</div>
         </div>
-      </div>
+      </section>
 
-      <div class="custom-quote" id="customQuote" contenteditable="true" spellcheck="false"></div>
-
-      <div class="time-section">
-        <div class="date-main" id="dateMain">--</div>
-        <div class="date-sub">
-          <span class="week" id="week">--</span>
+      <section class="panel panel-right">
+        <div class="upload-placeholder" id="uploadPlaceholder">
+          <svg viewBox="0 0 24 24">
+            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+          </svg>
+          <p>点击上传图片或动图</p>
         </div>
-        <div class="clock" id="time">--:--:--</div>
-      </div>
-    </section>
+        
+        <div class="image-container">
+          <img id="displayImage" alt="上传的图片" />
+        </div>
+        <input type="file" id="imageUpload" accept="image/*,image/gif">
+      </section>
+    </main>
 
-    <section class="panel panel-right">
-      <div class="upload-placeholder" id="uploadPlaceholder">
-        <svg viewBox="0 0 24 24">
-          <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
-        </svg>
-        <p>点击上传图片或动图</p>
-      </div>
-      
-      <div class="image-container">
-        <img id="displayImage" alt="上传的图片" />
-      </div>
-      <input type="file" id="imageUpload" accept="image/*,image/gif">
-    </section>
-  </main>
-
-  <footer class="controls" id="controlBar">
-    <span class="ctl-label">刷新间隔</span>
-    <select id="interval">
-      <option value="0">手动刷新</option>
-      <option value="1">1 分钟</option>
-      <option value="5">5 分钟</option>
-      <option value="10">10 分钟</option>
-      <option value="15">15 分钟</option>
-      <option value="30">30 分钟</option>
-      <option value="60">60 分钟</option>
-    </select>
-    <button id="refreshBtn">立即刷新</button>
-    <button id="fullscreenBtn">全屏模式</button>
-    <span id="status"></span>
-  </footer>
+    <footer class="controls" id="controlBar">
+      <span class="ctl-label">刷新间隔</span>
+      <select id="interval">
+        <option value="0">手动刷新</option>
+        <option value="1">1 分钟</option>
+        <option value="5">5 分钟</option>
+        <option value="10">10 分钟</option>
+        <option value="15">15 分钟</option>
+        <option value="30">30 分钟</option>
+        <option value="60">60 分钟</option>
+      </select>
+      <button id="refreshBtn">立即刷新</button>
+      <button id="rotateBtn">强制横屏</button>
+      <button id="fullscreenBtn">全屏</button>
+      <span id="status"></span>
+    </footer>
+  </div>
 </div>
 
 <script>
+/* ================= 强制横屏逻辑 ================= */
+const rotateBtn = document.getElementById('rotateBtn');
+const body = document.body;
+
+// 检查是否已经保存了状态
+if (localStorage.getItem('forceLandscape') === 'true') {
+  body.classList.add('force-landscape');
+  rotateBtn.textContent = '恢复竖屏';
+}
+
+rotateBtn.addEventListener('click', () => {
+  body.classList.toggle('force-landscape');
+  if (body.classList.contains('force-landscape')) {
+    rotateBtn.textContent = '恢复竖屏';
+    localStorage.setItem('forceLandscape', 'true');
+  } else {
+    rotateBtn.textContent = '强制横屏';
+    localStorage.setItem('forceLandscape', 'false');
+  }
+});
+
+/* ================= 全屏逻辑 ================= */
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+function toggleFullscreen() {
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    const docEl = document.documentElement;
+    if (docEl.requestFullscreen) docEl.requestFullscreen();
+    else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
+    fullscreenBtn.textContent = '退出全屏';
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    fullscreenBtn.textContent = '全屏';
+  }
+}
+fullscreenBtn.addEventListener('click', toggleFullscreen);
+document.addEventListener('dblclick', toggleFullscreen); // 双击全屏
+
 /* ================= 时钟 & 日期 ================= */
 const WEEK = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
 const pad = n => String(n).padStart(2, '0');
@@ -444,8 +479,7 @@ const els = {
   wind: document.getElementById('wind'), dateMain: document.getElementById('dateMain'),
   week: document.getElementById('week'), time: document.getElementById('time'),
   status: document.getElementById('status'), interval: document.getElementById('interval'),
-  refreshBtn: document.getElementById('refreshBtn'), customQuote: document.getElementById('customQuote'),
-  controlBar: document.getElementById('controlBar'), fullscreenBtn: document.getElementById('fullscreenBtn')
+  refreshBtn: document.getElementById('refreshBtn'), customQuote: document.getElementById('customQuote')
 };
 
 function tick(){
@@ -457,12 +491,10 @@ function tick(){
 tick();
 setInterval(tick, 1000);
 
-/* ================= 艺术字自适应与保存 ================= */
+/* ================= 艺术字自适应 ================= */
 function adjustFontSize() {
-  const rawText = els.customQuote.textContent || '';
-  const text = rawText.replace(/\s/g, '');
+  const text = (els.customQuote.textContent || '').replace(/\s/g, '');
   const len = text.length;
-  
   if (len === 0) {
     els.customQuote.style.setProperty('--quote-size', '36px');
     return;
@@ -471,7 +503,9 @@ function adjustFontSize() {
   if (len > 4) baseSize = 72 - (len - 4) * 2.5;
   if (baseSize < 22) baseSize = 22;
   
-  const screenFactor = Math.min(window.innerWidth / 1200, 1);
+  // 根据当前容器的宽度动态计算，以适配强制旋转后的屏幕尺寸
+  const containerWidth = document.getElementById('rotateWrapper').offsetWidth;
+  const screenFactor = Math.min(containerWidth / 1200, 1);
   let finalSize = baseSize * screenFactor;
   if (finalSize < 18) finalSize = 18;
 
@@ -480,7 +514,7 @@ function adjustFontSize() {
 
 const savedQuote = localStorage.getItem('customQuoteText');
 if (savedQuote) els.customQuote.textContent = savedQuote;
-adjustFontSize();
+setTimeout(adjustFontSize, 100); // 延迟执行以适应旋转后的尺寸
 
 els.customQuote.addEventListener('input', () => {
   if (els.customQuote.innerHTML === '<br>' || els.customQuote.innerHTML === '<div><br></div>') {
@@ -495,9 +529,9 @@ els.customQuote.addEventListener('keydown', (e) => {
     document.execCommand('insertLineBreak'); 
   }
 });
-window.addEventListener('resize', adjustFontSize);
+window.addEventListener('resize', () => setTimeout(adjustFontSize, 100));
 
-/* ================= 图片上传功能 ================= */
+/* ================= 图片上传 ================= */
 const uploadPlaceholder = document.getElementById('uploadPlaceholder');
 const imageUpload = document.getElementById('imageUpload');
 const displayImage = document.getElementById('displayImage');
@@ -513,34 +547,6 @@ imageUpload.addEventListener('change', (e) => {
     displayImage.onload = () => URL.revokeObjectURL(objectUrl);
   }
 });
-
-/* ================= 全屏控制逻辑 ================= */
-function toggleFullscreen() {
-  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-    // 请求全屏
-    const docEl = document.documentElement;
-    if (docEl.requestFullscreen) {
-      docEl.requestFullscreen();
-    } else if (docEl.webkitRequestFullscreen) { /* Safari/旧版安卓 */
-      docEl.webkitRequestFullscreen();
-    }
-    els.fullscreenBtn.textContent = '退出全屏';
-    els.controlBar.style.display = 'none'; // 全屏时隐藏底部控制条，更沉浸
-  } else {
-    // 退出全屏
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) {
-      document.webkitExitFullscreen();
-    }
-    els.fullscreenBtn.textContent = '全屏模式';
-    els.controlBar.style.display = 'flex';
-  }
-}
-
-els.fullscreenBtn.addEventListener('click', toggleFullscreen);
-// 支持双击屏幕全屏/退出全屏（墨水屏如果没有键盘鼠标，双击很实用）
-document.addEventListener('dblclick', toggleFullscreen);
 
 /* ================= 天气数据 ================= */
 const WMO = {
@@ -621,14 +627,12 @@ async function loadWeather(){
 /* ================= 自动刷新控制 ================= */
 const ALLOWED = [0, 1, 5, 10, 15, 30, 60];
 let timer = null;
-
 function scheduleRefresh(minutes){
   clearInterval(timer);
   if (minutes > 0) timer = setInterval(loadWeather, minutes * 60 * 1000);
 }
-
-const saved = Number(localStorage.getItem('weatherRefreshMinutes'));
-let minutes = ALLOWED.includes(saved) ? saved : 10;
+const savedInterval = Number(localStorage.getItem('weatherRefreshMinutes'));
+let minutes = ALLOWED.includes(savedInterval) ? savedInterval : 10;
 els.interval.value = String(minutes);
 scheduleRefresh(minutes);
 
